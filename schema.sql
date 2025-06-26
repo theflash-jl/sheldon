@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     base_sku TEXT NOT NULL,
+    supplier TEXT,
+    brand TEXT,
     tag TEXT,
     discontinued BOOLEAN DEFAULT 0
 );
