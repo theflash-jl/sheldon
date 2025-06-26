@@ -1,0 +1,70 @@
+GPT Project Instructions: Catalog Parser & Enrichment Pipeline (Lightspeed + Shopify)
+
+Project Owner:
+Joel, Engineer and product data strategist.
+The project will automate the parsing, structuring, and enrichment of supplier catalogs into normalized data for Shopify and Lightspeed X integrations.
+
+Project Purpose:
+Build a Python-based pipeline that extracts product information from supplier PDF catalogs, structures it into a normalized SQLite database, and exports JSON formatted product data for use in Shopify and Lightspeed systems.
+
+Input Characteristics:
+- Source: PDF catalogs from suppliers.
+- Format: 2-column brochure layout.
+- Data Consistency: ~80% consistent layout; handled via heuristics.
+- Fields extracted (per variant):
+  Title, SKU, Barcode, Bulk price, SRP, RRP, Packaging, Dimensions, Colour/Design, and Notes.
+- Section headers are in UPPERCASE and used as tag values for later taxonomy enrichment.
+- Images are handled outside this pipeline.
+
+Output & Data Handling:
+- A normalized SQLite database with version control.
+- Separate exports in JSON format for:
+  - Shopify: Price = SRP, Compare-at = RRP.
+  - Lightspeed: Price = SRP, with discount logic to be added later.
+- All prices include GST.
+- AUD-only for now, but currency field is included for flexibility.
+- Products marked "discontinued" if missing from latest catalog.
+
+Data Model Overview:
+1. products — base product entity
+2. variants — dimension/color-specific SKUs
+3. prices — current prices
+4. price_history — versioned pricing snapshots
+
+Titles are made unique by combining base title and dimension (used only in database; not in Shopify/Lightspeed variants).
+
+Rules & Assumptions:
+- Never skip variants. If data is missing, infer from context or previous entry.
+- Variants must be grouped under the same product if they share a title.
+- Size (dimension) is stored as a variant field in the DB, but not used as Shopify/Lightspeed variants.
+- Shopify variants are grouped by colour/design only.
+- Future taxonomy mapping will be handled later via AI or rule-based tag enrichment.
+- Serverless is future goal, but for now everything runs locally.
+
+Folder Structure:
+project-root/
+├── data/
+│   ├── db/                 # SQLite snapshots (version-controlled)
+│   └── pdfs/               # Raw supplier PDFs
+├── exports/
+│   ├── shopify/
+│   └── lightspeed/
+├── logs/
+│   └── parse_report.txt    # Reports for inferred/skipped/missing fields
+├── scripts/
+│   ├── parser.py           # Raw PDF to text block logic
+│   ├── extractor.py        # Extract product fields from chunks
+│   ├── loader.py           # Normalize and insert into DB
+│   └── exporter.py         # JSON exporters for Shopify/Lightspeed
+└── schema.sql              # SQLite schema
+
+GPT Interaction Guidelines:
+In future chats:
+- Assume you are collaborating as a technical co-developer
+- Use clear function/method design, avoid excessive abstraction
+- Code must be modular, logged, and debuggable
+- Use realistic test cases and sample PDF snippets where possible
+- Help identify inconsistencies, suggest schema/logic improvements
+- Flag data quality issues like inferred fields, missing barcodes, title collisions
+
+If a prompt lacks detail (e.g., “parse this file”), clarify assumptions before proceeding. Prioritize robustness and flexibility over speed.
